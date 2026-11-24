@@ -1,0 +1,65 @@
+{
+  "$schema": "https://app.clawnify.com/schema/v1/clawnify.json",
+  "version": 1,
+  "name": "Projects",
+  "description": "Projects that run for weeks, on a Gantt timeline: phases with a start, an end and who does each one. Drag a bar to move or resize it, or drag a project to move its whole plan. Someone booked on two phases at once is flagged. Each project keeps its drawings, quotes and site photos in one place. For contractors, installers, renovation teams and agencies. Like Monday.com's timeline, Microsoft Project or TeamGantt.",
+  "icon": "icon.svg",
+  "tags": [
+    "project-management",
+    "gantt",
+    "timeline",
+    "planning",
+    "documents"
+  ],
+  "app": {
+    "framework": "react+hono",
+    "database": true,
+    "storage": true
+  },
+  "deploy": {
+    "subtitle": "Plan projects on a timeline and keep each one's files in one place, on your own database",
+    "prompts": [
+      {
+        "key": "company",
+        "label": "What does your company do?",
+        "placeholder": "e.g. Window and door maintenance, facade renovation, office fit-outs",
+        "required": true
+      },
+      {
+        "key": "projects",
+        "label": "What kind of projects do you run?",
+        "type": "textarea",
+        "placeholder": "e.g. Facade renovations of 4 to 12 weeks, window replacement per housing block"
+      },
+      {
+        "key": "phases",
+        "label": "What phases does a typical project go through?",
+        "type": "textarea",
+        "placeholder": "e.g. Survey, order materials, demolition, frames, glazing, finishing, handover"
+      },
+      {
+        "key": "people",
+        "label": "Who does the work?",
+        "type": "textarea",
+        "placeholder": "e.g. Crews Noord and Zuid, a site lead, subcontractor Glas & Co"
+      },
+      {
+        "key": "language",
+        "label": "Which language should the app speak?",
+        "placeholder": "e.g. English, Dutch"
+      },
+      {
+        "key": "details",
+        "label": "Anything else?",
+        "type": "textarea",
+        "placeholder": "Projects to start with, brand colour, what you track today in a spreadsheet..."
+      }
+    ]
+  },
+  "template": {
+    "displayName": "Projects",
+    "category": "Operations",
+    "enabled": true
+  },
+  "agent": "agent.md"
+}
