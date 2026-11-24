@@ -1,3 +1,8 @@
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="readme-banner-dark.png" />
+  <img src="readme-banner.png" alt="OpenProjects: projects on a Gantt timeline, with the phases a crew is double booked on marked" width="100%" />
+</picture>
+
 # OpenProjects
 
 Plan projects that run for weeks on a Gantt timeline, and keep each project's
@@ -6,6 +11,16 @@ drawings, quotes and site photos in one place.
 An open-source app template provided by [Clawnify.com](https://clawnify.com).
 
 [![Deploy with Clawnify](https://app.clawnify.com/deploy-button.svg)](https://app.clawnify.com/deploy?repo=clawnify/OpenProjects)
+
+## See it in action
+
+Conceptual UI illustrations of the app's main capabilities, with fictional example data. Open an image to see the details.
+
+| Drag to replan | Double bookings, flagged |
+|---|---|
+| [![A phase lifted and moved two days later on the timeline, with its new dates shown above it](previews/drag.png)](previews/drag.png) | [![Two phases from different projects with the same crew, both marked, and a tooltip naming the other phase](previews/double-booking.png)](previews/double-booking.png) |
+| **Who does each phase** | **Every file in its project** |
+| [![A phase form with the assignee picker open, suggesting crews already in the plan with how many phases each has](previews/assign.png)](previews/assign.png) | [![A project's Files tab with a site photo, drawings and a quote, and the photo opened in place](previews/files.png)](previews/files.png) |
 
 ## What it does
 

@@ -59,6 +59,7 @@
   "template": {
     "displayName": "Projects",
     "category": "Operations",
+    "image": "https://raw.githubusercontent.com/clawnify/OpenProjects/main/readme-banner.png",
     "enabled": true
   },
   "agent": "agent.md"

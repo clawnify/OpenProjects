@@ -1,0 +1,30 @@
+[
+  {
+    "src": "previews/drag.png",
+    "alt": "Conceptual Gantt timeline for an office fit-out: the 'Partitions and ceilings' phase is lifted under a grabbing hand and moved two days later, with its new dates and length shown above it and a dashed outline where it was. Behind it, a project's bar moved a week later, which moves its whole plan.",
+    "caption": "Drag a bar to change the plan.",
+    "width": 1600,
+    "height": 1000
+  },
+  {
+    "src": "previews/double-booking.png",
+    "alt": "Conceptual timeline rows from two projects, both done by Crew South on overlapping days: 'Window frames' and 'Flooring' each carry a warning mark, and a tooltip reads 'Double booked: Crew South is also on Flooring (Linden House fit-out, 9 Dec – 11 Dec)'. Behind it, the timeline header saying 4 phases are double booked.",
+    "caption": "The same crew on two jobs at once is flagged.",
+    "width": 1600,
+    "height": 1000
+  },
+  {
+    "src": "previews/assign.png",
+    "alt": "Conceptual phase form for 'Window frames' with start and end dates and the 'Who does it' picker open: the search reads 'crew', and the list offers Crew North, Crew South and Crew East with how many phases each has, plus using the typed name as written. Behind it, a December calendar with the phase's days selected.",
+    "caption": "Names you have used come up as you type.",
+    "width": 1600,
+    "height": 1000
+  },
+  {
+    "src": "previews/files.png",
+    "alt": "Conceptual Files tab of a facade project: a site photo, the elevation drawings and the quote as cards with size, date and who added them, with a pointer clicking the photo. Behind it, the photo opened in place.",
+    "caption": "Drawings, quotes and photos stay with the project.",
+    "width": 1600,
+    "height": 1000
+  }
+]
