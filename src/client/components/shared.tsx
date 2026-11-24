@@ -240,7 +240,11 @@ export function PersonField({ id, value, onChange }: { id?: string; value: strin
   );
 }
 
-/** The 3px category bar at a row's left edge. */
+/**
+ * The 3px category bar beside a project's name. The caller gives its height.
+ * Nothing here for a caller to override: public demos rename class names,
+ * after which tailwind-merge can no longer see two classes conflict.
+ */
 export function CategoryBar({ id, className }: { id: string; className?: string }) {
-  return <span aria-hidden className={cn("w-[3px] self-stretch rounded-full", projectColor(id).dot, className)} />;
+  return <span aria-hidden className={cn("w-[3px] shrink-0 rounded-full", projectColor(id).dot, className)} />;
 }

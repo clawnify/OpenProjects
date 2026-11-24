@@ -111,7 +111,7 @@ export function Projects() {
                 <TableRow key={p.id} className="cursor-pointer" onClick={() => navigate(`/projects/${p.id}`)}>
                   <TableCell className="pl-6">
                     <div className="flex items-center gap-2.5">
-                      <CategoryBar id={p.id} className="h-5 self-auto" />
+                      <CategoryBar id={p.id} className="h-5" />
                       <a
                         href={`/projects/${p.id}`}
                         onClick={(e) => {

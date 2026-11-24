@@ -67,6 +67,7 @@ export function Gantt(p: Props) {
   return (
     <div
       ref={scroller}
+      data-gantt-scroller
       className="relative min-h-0 flex-1 overflow-auto [--gantt-left:9.5rem] md:[--gantt-left:17rem]"
       role="region"
       aria-label="Project timeline"
@@ -417,10 +418,51 @@ function DragHint({ left, text }: { left: number; text: string }) {
 
 type Mode = "move" | "start" | "end";
 
+/** How close to the lane's edge, in px, a drag starts scrolling the timeline. */
+const EDGE = 48;
+/** Fastest auto-scroll, in px per second, reached at the edge and beyond it. Per second, not per frame, so a 120 Hz screen scrolls no faster. */
+const MAX_SPEED = 700;
+
+type DragState = {
+  mode: Mode;
+  /** Pointer x and the timeline's scrollLeft when the press started. */
+  x: number;
+  scroll0: number;
+  /** The latest pointer x, which auto-scroll keeps measuring from while the pointer rests. */
+  lastX: number;
+  moved: boolean;
+  pointer: number;
+  scroller: HTMLElement | null;
+  raf: number;
+  /** Time of the last auto-scroll frame, and the fraction of a pixel not scrolled yet. */
+  t: number;
+  carry: number;
+};
+
+/** Days dragged so far: the pointer's travel plus however far the timeline scrolled under it. */
+function travel(s: DragState, clientX: number) {
+  return clientX - s.x + (s.scroller ? s.scroller.scrollLeft - s.scroll0 : 0);
+}
+
+/**
+ * Auto-scroll speed in px per second for a pointer at x: negative near the
+ * lane's left edge (just right of the sticky name column), positive near the
+ * right edge, faster the closer it gets and full speed past the edge.
+ */
+function edgeSpeed(scroller: HTMLElement, x: number) {
+  const box = scroller.getBoundingClientRect();
+  const laneLeft = scroller.querySelector<HTMLElement>("[data-gantt-left]")?.getBoundingClientRect().right ?? box.left;
+  const ramp = (d: number) => MAX_SPEED * Math.min(1, (EDGE - d) / EDGE);
+  if (x < laneLeft + EDGE && scroller.scrollLeft > 0) return -ramp(x - laneLeft);
+  if (x > box.right - EDGE && scroller.scrollLeft < scroller.scrollWidth - scroller.clientWidth) return ramp(box.right - x);
+  return 0;
+}
+
 /**
  * Pointer drag that snaps to whole days. A press that does not move is a
  * click. Touch never drags: on a phone a swipe scrolls the timeline and a tap
- * opens the phase, where its dates can be changed.
+ * opens the phase, where its dates can be changed. Held near either edge of
+ * the timeline, a drag scrolls it, so a phase can be moved past what is in view.
  */
 function useDrag({ px, onCommit, onClick, length = Infinity, resetKey }: {
   px: number; onCommit: (dStart: number, dEnd: number) => void; onClick: () => void; length?: number;
@@ -428,7 +470,17 @@ function useDrag({ px, onCommit, onClick, length = Infinity, resetKey }: {
   resetKey: string;
 }) {
   const [delta, setDelta] = useState({ dStart: 0, dEnd: 0, dragging: false });
-  const state = useRef<{ mode: Mode; x: number; moved: boolean; pointer: number } | null>(null);
+  const state = useRef<DragState | null>(null);
+  // The auto-scroll loop outlives the render that started it; it reads these.
+  const latest = useRef({ px, length });
+  latest.current = { px, length };
+
+  const stopScroll = () => {
+    const s = state.current;
+    if (s?.raf) cancelAnimationFrame(s.raf);
+    if (s) s.raf = 0;
+  };
+  useEffect(() => () => stopScroll(), []);
 
   // Keep the dropped position until the saved dates arrive, so a bar does not
   // jump back for a moment and then forward again. If the save fails the
@@ -447,10 +499,32 @@ function useDrag({ px, onCommit, onClick, length = Infinity, resetKey }: {
     return () => clearTimeout(t);
   }, [delta.dragging]);
 
-  const calc = (mode: Mode, d: number) => {
+  const calc = (mode: Mode, d: number, len = length) => {
     if (mode === "move") return { dStart: d, dEnd: d };
-    if (mode === "start") return { dStart: Math.min(d, length - 1), dEnd: 0 };
-    return { dStart: 0, dEnd: Math.max(d, -(length - 1)) };
+    if (mode === "start") return { dStart: Math.min(d, len - 1), dEnd: 0 };
+    return { dStart: 0, dEnd: Math.max(d, -(len - 1)) };
+  };
+
+  // One frame of auto-scroll: move the timeline, then the bar by the same
+  // distance, and go again while the pointer stays near the edge.
+  const tick = (now: number) => {
+    const s = state.current;
+    if (!s?.scroller) return;
+    const v = edgeSpeed(s.scroller, s.lastX);
+    if (!v) {
+      s.raf = 0;
+      return;
+    }
+    // The first frame only sets the clock; a long gap (a background tab) counts as one frame.
+    const dt = s.t ? Math.min(now - s.t, 50) / 1000 : 0;
+    s.t = now;
+    const step = v * dt + s.carry;
+    const whole = Math.trunc(step);
+    s.carry = step - whole;
+    s.scroller.scrollLeft += whole;
+    const { px: p, length: len } = latest.current;
+    setDelta({ ...calc(s.mode, Math.round(travel(s, s.lastX) / p), len), dragging: true });
+    s.raf = requestAnimationFrame(tick);
   };
 
   const handlers = (mode: Mode) => ({
@@ -462,27 +536,38 @@ function useDrag({ px, onCommit, onClick, length = Infinity, resetKey }: {
       } catch {
         // A pointer the browser no longer tracks; the drag still works while it stays over the bar.
       }
-      state.current = { mode, x: e.clientX, moved: false, pointer: e.pointerId };
+      const scroller = e.currentTarget.closest<HTMLElement>("[data-gantt-scroller]");
+      state.current = {
+        mode, x: e.clientX, lastX: e.clientX, scroll0: scroller?.scrollLeft ?? 0,
+        moved: false, pointer: e.pointerId, scroller, raf: 0, t: 0, carry: 0,
+      };
     },
     onPointerMove: (e: ReactPointerEvent<HTMLElement>) => {
       const s = state.current;
       if (!s || s.mode !== mode || s.pointer !== e.pointerId) return;
-      const dx = e.clientX - s.x;
+      s.lastX = e.clientX;
+      const dx = travel(s, e.clientX);
       if (!s.moved && Math.abs(dx) < 4) return;
       s.moved = true;
       setDelta({ ...calc(mode, Math.round(dx / px)), dragging: true });
+      if (!s.raf && s.scroller && edgeSpeed(s.scroller, e.clientX)) {
+        s.t = 0;
+        s.carry = 0;
+        s.raf = requestAnimationFrame(tick);
+      }
     },
     onPointerUp: (e: ReactPointerEvent<HTMLElement>) => {
       const s = state.current;
       if (!s || s.mode !== mode || s.pointer !== e.pointerId) return;
       e.stopPropagation();
+      stopScroll();
       state.current = null;
       if (!s.moved) {
         setDelta({ dStart: 0, dEnd: 0, dragging: false });
         onClick();
         return;
       }
-      const d = calc(mode, Math.round((e.clientX - s.x) / px));
+      const d = calc(mode, Math.round(travel(s, e.clientX) / px));
       if (d.dStart === 0 && d.dEnd === 0) {
         setDelta({ dStart: 0, dEnd: 0, dragging: false });
         return;
@@ -492,6 +577,7 @@ function useDrag({ px, onCommit, onClick, length = Infinity, resetKey }: {
       onCommit(d.dStart, d.dEnd);
     },
     onPointerCancel: () => {
+      stopScroll();
       state.current = null;
       setDelta({ dStart: 0, dEnd: 0, dragging: false });
     },

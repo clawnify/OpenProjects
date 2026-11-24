@@ -48,7 +48,7 @@ export function ProjectPage({ id, tab }: { id: string; tab: string | null }) {
           </TooltipTrigger>
           <TooltipContent>All projects</TooltipContent>
         </Tooltip>
-        <CategoryBar id={p.id} className="h-6 self-auto" />
+        <CategoryBar id={p.id} className="h-6" />
         <InlineText
           value={p.name}
           label="Project name"
